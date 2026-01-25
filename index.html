@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Quản lý Hạnh kiểm Học sinh</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.12.4/antd.min.css" />
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(to bottom, #f0f2f5, #ffffff);
+            margin: 0;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 16px;
+            background: linear-gradient(135deg, #1890ff, #40a9ff);
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .student-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+        }
+
+        .student-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-danger {
+            border: 2px solid #ff4d4f !important;
+            background: #fff1f0 !important;
+        }
+
+        .card-success {
+            border: 2px solid #52c41a !important;
+            background: #f6ffed !important;
+        }
+
+        .add-btn {
+            margin: 16px 0;
+            height: 48px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .link {
+            color: #1890ff;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .link:hover {
+            color: #40a9ff;
+        }
+
+        .ant-list-item {
+            padding: 0 !important;
+        }
+
+        .search-input {
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .ant-tabs-nav {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .ant-tabs-tab-active {
+            font-weight: bold !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/plugin/customParseFormat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/plugin/advancedFormat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/plugin/weekOfYear.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/locale/vi.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.12.4/antd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script type="text/babel">
+        dayjs.extend(dayjs_plugin_customParseFormat);
+        dayjs.extend(dayjs_plugin_advancedFormat);
+        dayjs.extend(dayjs_plugin_weekOfYear);
+        dayjs.locale('vi');
+
+        const { Tabs, Card, Button, Modal, Form, Input, DatePicker, message, List, Pagination, Typography, Space } = antd;
+        const { TabPane } = Tabs;
+        const { Text } = Typography;
+
+        const App = () => {
+            const [students, setStudents] = React.useState([]);
+            const [activeTab, setActiveTab] = React.useState("1");
+            const [isModalOpen, setIsModalOpen] = React.useState(false);
+            const [editingStudent, setEditingStudent] = React.useState(null);
+            const [form] = Form.useForm();
+            const [currentPage, setCurrentPage] = React.useState(1);
+            const [searchText, setSearchText] = React.useState('');
+            const pageSize = 3;
+
+            React.useEffect(() => {
+                const saved = localStorage.getItem('students');
+                if (saved) setStudents(JSON.parse(saved));
+            }, []);
+
+            React.useEffect(() => {
+                localStorage.setItem('students', JSON.stringify(students));
+            }, [students]);
+
+            const getViolationsByMonth = (violations) => {
+                const map = {};
+                violations.forEach(v => {
+                    const month = v.date.slice(0, 7);
+                    map[month] = (map[month] || 0) + 1;
+                });
+                return map;
+            };
+
+            const predictMonthlyConduct = (violationsByMonth) => {
+                const months = Object.keys(violationsByMonth).sort();
+                const results = {};
+                let consecutiveDown = 0;
+                let lastLevel = 0;
+
+                months.forEach(month => {
+                    const count = violationsByMonth[month];
+                    let level = lastLevel;
+                    if (count >= 3) {
+                        level = Math.min(3, level + 1);
+                        consecutiveDown++;
+                        if (consecutiveDown >= 2) level = Math.min(3, level + 1);
+                    } else if (consecutiveDown > 0) {
+                        level = Math.max(0, level - 1);
+                        consecutiveDown = 0;
+                    }
+                    const levels = ['Tốt', 'Khá', 'Đạt', 'Chưa đạt'];
+                    results[month] = levels[level];
+                    lastLevel = level;
+                });
+                return results;
+            };
+
+            const predictOverall = (monthlyConduct) => {
+                const values = Object.values(monthlyConduct);
+                if (values.length === 0) return { semester: 'Tốt', year: 'Tốt' };
+                const levelMap = { 'Tốt': 0, 'Khá': 1, 'Đạt': 2, 'Chưa đạt': 3 };
+                const avg = values.reduce((sum, v) => sum + levelMap[v], 0) / values.length;
+                const levels = ['Tốt', 'Khá', 'Đạt', 'Chưa đạt'];
+                const predicted = levels[Math.round(avg)];
+                return { semester: predicted, year: predicted };
+            };
+
+            // Tổng hợp học sinh cùng tên (hợp nhất violations)
+            const aggregatedStudents = students.reduce((acc, student) => {
+                const existing = acc.find(s => s.name.trim().toLowerCase() === student.name.trim().toLowerCase());
+                if (existing) {
+                    existing.violations = [...(existing.violations || []), ...(student.violations || [])];
+                } else {
+                    acc.push({ ...student });
+                }
+                return acc;
+            }, []);
+
+            const enhancedStudents = aggregatedStudents.map((student, index) => {
+                const violationsByMonth = getViolationsByMonth(student.violations || []);
+                const monthlyConduct = predictMonthlyConduct(violationsByMonth);
+                const overall = predictOverall(monthlyConduct);
+                const currentMonth = dayjs().format('YYYY-MM');
+                const thisMonthCount = violationsByMonth[currentMonth] || 0;
+                const willDowngrade = thisMonthCount >= 3;
+                const lastDriveLink = student.violations?.length > 0 ? student.violations[student.violations.length - 1].driveLink : '';
+                const lastViolation = student.violations?.[student.violations.length - 1] || null;
+
+                return {
+                    ...student,
+                    key: index,
+                    totalViolations: student.violations?.length || 0,
+                    thisMonthViolations: thisMonthCount,
+                    willDowngrade: willDowngrade ? 'Có (hạ bậc)' : 'Không hạ',
+                    monthlyConductStr: Object.entries(monthlyConduct).map(([m, c]) => `${m}: ${c}`).join(' | ') || 'Tốt',
+                    semester: overall.semester,
+                    year: overall.year,
+                    lastDriveLink,
+                    lastViolation,
+                    isDanger: willDowngrade
+                };
+            });
+
+            const filteredStudents = enhancedStudents.filter(s =>
+                s.name.toLowerCase().includes(searchText.toLowerCase())
+            );
+
+            const paginatedStudents = filteredStudents.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+            const handleEdit = (student) => {
+                setEditingStudent(student);
+                form.setFieldsValue({ name: student.name });
+                setIsModalOpen(true);
+            };
+
+            const handleDelete = (index) => {
+                Modal.confirm({
+                    title: 'Xác nhận xóa học sinh?',
+                    content: 'Dữ liệu sẽ bị xóa vĩnh viễn.',
+                    okText: 'Xóa',
+                    cancelText: 'Hủy',
+                    onOk: () => {
+                        setStudents(students.filter((_, i) => i !== index));
+                        message.success('Đã xóa');
+                    }
+                });
+            };
+
+            const handleAddNew = () => {
+                setEditingStudent(null);
+                form.resetFields();
+                setIsModalOpen(true);
+            };
+
+            const handleModalOk = () => {
+                form.validateFields().then(values => {
+                    const newViolation = {
+                        date: values.date ? values.date.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
+                        description: values.description,
+                        driveLink: values.driveLink
+                    };
+
+                    let updatedStudents = [...students];
+
+                    if (editingStudent) {
+                        const idx = students.findIndex(s => s.name.trim().toLowerCase() === editingStudent.name.trim().toLowerCase());
+                        const updated = { ...students[idx], name: values.name.trim() };
+                        updated.violations = [...(updated.violations || []), newViolation];
+                        updatedStudents[idx] = updated;
+                    } else {
+                        const newStudent = { name: values.name.trim(), violations: [newViolation] };
+                        updatedStudents.push(newStudent);
+                    }
+
+                    setStudents(updatedStudents);
+                    setIsModalOpen(false);
+                    message.success('Lưu thành công');
+                }).catch(() => message.error('Vui lòng điền đầy đủ thông tin!'));
+            };
+
+            const exportJSON = () => {
+                const dataStr = JSON.stringify(students, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'hanhkiem.json';
+                a.click();
+            };
+
+            const exportExcel = () => {
+                const ws = XLSX.utils.json_to_sheet(enhancedStudents.map(s => ({
+                    'Họ tên': s.name,
+                    'Tổng tự kiểm': s.totalViolations,
+                    'Tháng này': s.thisMonthViolations,
+                    'Sẽ hạ tháng này': s.willDowngrade,
+                    'Hạnh kiểm tháng': s.monthlyConductStr,
+                    'Dự đoán HK': s.semester,
+                    'Dự đoán Năm': s.year,
+                    'Link ảnh gần nhất': s.lastDriveLink
+                })));
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Hạnh kiểm');
+                XLSX.writeFile(wb, 'hanhkiem.xlsx');
+            };
+
+            const handleImport = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        if (file.name.endsWith('.json')) {
+                            const data = JSON.parse(evt.target.result);
+                            setStudents(data);
+                            message.success('Nhập JSON thành công');
+                        } else {
+                            message.info('Hiện chỉ hỗ trợ file JSON.');
+                        }
+                    } catch (err) {
+                        message.error('Lỗi nhập file: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            const StudentCard = ({ student, showActions = true }) => (
+                <Card
+                    className={`student-card ${student.isDanger ? 'card-danger' : 'card-success'}`}
+                    title={<Text strong style={{ color: student.isDanger ? '#cf1322' : '#389e0d' }}>{student.name}</Text>}
+                    extra={showActions ? (
+                        <Space>
+                            <Button type="link" onClick={() => handleEdit(student)}>Sửa</Button>
+                            <Button type="link" danger onClick={() => handleDelete(student.key)}>Xóa</Button>
+                        </Space>
+                    ) : null}
+                    actions={showActions ? [
+                        <Text strong type={student.isDanger ? 'danger' : 'success'}>
+                            {student.willDowngrade}
+                        </Text>
+                    ] : null}
+                >
+                    <p><strong>Tổng tự kiểm (toàn bộ):</strong> {student.totalViolations}</p>
+                    <p><strong>Tự kiểm tháng này:</strong> {student.thisMonthViolations}</p>
+                    <p><strong>Hạnh kiểm tháng:</strong> {student.monthlyConductStr || 'Chưa có'}</p>
+                    <p><strong>Dự đoán HK:</strong> {student.semester}</p>
+                    <p><strong>Dự đoán Năm:</strong> {student.year}</p>
+                    <p>
+                        <strong>Tự kiểm gần nhất:</strong><br />
+                        {student.lastViolation ? (
+                            <>
+                                Ngày: {student.lastViolation.date}<br />
+                                Mô tả: {student.lastViolation.description}<br />
+                                <span className="link" onClick={() => window.open(student.lastDriveLink.replace('/view', '/preview'), '_blank')}>
+                                    Xem ảnh Google Drive →
+                                </span>
+                            </>
+                        ) : 'Chưa có vi phạm'}
+                    </p>
+                </Card>
+            );
+
+            return (
+                <>
+                    <div className="header">Quản lý Hạnh kiểm Học sinh Lớp 7a4 cô Hiếu</div>
+
+                    <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
+
+                        {/*
+                            <TabPane tab="Danh sách (Quản lý)" key="1">
+                            <Input.Search
+                                placeholder="Tìm theo tên học sinh..."
+                                className="search-input"
+                                value={searchText}
+                                onChange={e => { setSearchText(e.target.value); setCurrentPage(1); }}
+                                allowClear
+                            />
+                            <Button type="primary" className="add-btn" onClick={handleAddNew}>
+                                + Thêm học sinh mới & Tự kiểm
+                            </Button>
+
+                            <List
+                                grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 3, xl: 3, xxl: 4 }}
+                                dataSource={paginatedStudents}
+                                renderItem={student => (
+                                    <List.Item><StudentCard student={student} showActions={true} /></List.Item>
+                                )}
+                            />
+
+                            {filteredStudents.length > pageSize && (
+                                <Pagination
+                                    current={currentPage}
+                                    pageSize={pageSize}
+                                    total={filteredStudents.length}
+                                    onChange={setCurrentPage}
+                                    style={{ textAlign: 'center', marginTop: 24 }}
+                                    showSizeChanger={false}
+                                />
+                            )}
+                        </TabPane>
+                    */}
+
+                        <TabPane tab="Xem cho học sinh" key="1">
+                            <Input.Search
+                                placeholder="Tìm theo tên học sinh..."
+                                className="search-input"
+                                value={searchText}
+                                onChange={e => { setSearchText(e.target.value); setCurrentPage(1); }}
+                                allowClear
+                            />
+
+                            <List
+                                grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 3, xl: 3, xxl: 4 }}
+                                dataSource={paginatedStudents}
+                                renderItem={student => (
+                                    <List.Item><StudentCard student={student} showActions={false} /></List.Item>
+                                )}
+                            />
+
+                            {filteredStudents.length > pageSize && (
+                                <Pagination
+                                    current={currentPage}
+                                    pageSize={pageSize}
+                                    total={filteredStudents.length}
+                                    onChange={setCurrentPage}
+                                    style={{ textAlign: 'center', marginTop: 24 }}
+                                    showSizeChanger={false}
+                                />
+                            )}
+                        </TabPane>
+
+                        <TabPane tab="Quy tắc" key="2">
+                            <div style={{ padding: '24px', lineHeight: '1.8', background: 'white', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                                <Text strong style={{ fontSize: 18, display: 'block', marginBottom: 12 }}>Quy tắc hạnh kiểm</Text>
+                                <ul style={{ paddingLeft: 20, margin: 0 }}>
+                                    <li>Mặc định: <Text strong>Tốt</Text></li>
+                                    <li>3 tự kiểm trong 1 tháng → hạ 1 bậc (Tốt → Khá)</li>
+                                    <li>2 tháng liên tiếp bị hạ → hạ thêm 1 bậc</li>
+                                    <li>Tháng sau cải thiện (dưới 3 tự kiểm) → nâng lại 1 bậc</li>
+                                    <li>Các bậc: Tốt → Khá → Đạt → Chưa đạt</li>
+                                </ul>
+                            </div>
+                        </TabPane>
+
+                        <TabPane tab="Xuất / Nhập" key="3">
+                            <div style={{ padding: '24px', textAlign: 'center', background: 'white', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                                <Button type="primary" style={{ margin: '12px 0', width: '100%', height: 48 }} onClick={exportJSON}>
+                                    Xuất JSON
+                                </Button>
+                                <Button type="default" style={{ margin: '12px 0', width: '100%', height: 48 }} onClick={exportExcel}>
+                                    Xuất Excel
+                                </Button>
+                                <br /><br />
+                                <input type="file" accept=".json" onChange={handleImport} style={{ margin: '16px 0' }} />
+                                <br />
+                                <small style={{ color: 'gray' }}>Nhập file JSON để khôi phục dữ liệu</small>
+                            </div>
+                        </TabPane>
+                    </Tabs>
+
+                    <Modal
+                        title={editingStudent ? "Sửa / Thêm tự kiểm" : "Thêm học sinh mới"}
+                        open={isModalOpen}
+                        onOk={handleModalOk}
+                        onCancel={() => setIsModalOpen(false)}
+                        okText="Lưu"
+                        cancelText="Hủy"
+                        width={500}
+                    >
+                        <Form form={form} layout="vertical">
+                            <Form.Item name="name" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}>
+                                <Input placeholder="Ví dụ: Nguyễn Văn A" size="large" />
+                            </Form.Item>
+                            <Form.Item name="date" label="Ngày vi phạm" rules={[{ required: true, message: 'Vui lòng chọn ngày!' }]}>
+                                <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} size="large" />
+                            </Form.Item>
+                            <Form.Item name="description" label="Mô tả vi phạm" rules={[{ required: true, message: 'Vui lòng mô tả!' }]}>
+                                <Input.TextArea rows={4} placeholder="Ví dụ: Đi muộn, nói chuyện riêng..." size="large" />
+                            </Form.Item>
+                            <Form.Item name="driveLink" label="Link Google Drive ảnh tờ tự kiểm" rules={[{ required: true, message: 'Vui lòng nhập link!' }]}>
+                                <Input placeholder="https://drive.google.com/file/d/.../view?usp=sharing" size="large" />
+                            </Form.Item>
+                        </Form>
+                    </Modal>
+                </>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+
+</html>
