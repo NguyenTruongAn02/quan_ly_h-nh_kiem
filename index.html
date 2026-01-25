@@ -126,8 +126,28 @@
             const pageSize = 3;
 
             React.useEffect(() => {
-                const saved = localStorage.getItem('students');
-                if (saved) setStudents(JSON.parse(saved));
+                const loadData = async () => {
+                    try {
+                        const response = await fetch('./hanhkiem.json');
+                        if (response.ok) {
+                            const jsonData = await response.json();
+                            setStudents(jsonData);
+                            localStorage.setItem('students', JSON.stringify(jsonData));
+                            message.success('Đã load dữ liệu từ hanhkiem.json');
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn('Không đọc được hanhkiem.json:', err);
+                    }
+
+                    // Fallback localStorage
+                    const saved = localStorage.getItem('students');
+                    if (saved) {
+                        setStudents(JSON.parse(saved));
+                    }
+                };
+
+                loadData();
             }, []);
 
             React.useEffect(() => {
