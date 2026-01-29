@@ -266,27 +266,37 @@
 
             const handleModalOk = () => {
                 form.validateFields().then(values => {
-                    const newViolation = {
-                        date: values.date ? values.date.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
-                        description: values.description,
-                        driveLink: values.driveLink
-                    };
+                    const numToAdd = parseInt(values.count) || 1;
+                    const violationsToAdd = [];
+
+                    for (let i = 0; i < numToAdd; i++) {
+                        violationsToAdd.push({
+                            date: values.date ? values.date.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
+                            description: values.description,
+                            driveLink: values.driveLink
+                        });
+                    }
 
                     let updatedStudents = [...students];
 
                     if (editingStudent) {
                         const idx = students.findIndex(s => s.name.trim().toLowerCase() === editingStudent.name.trim().toLowerCase());
-                        const updated = { ...students[idx], name: values.name.trim() };
-                        updated.violations = [...(updated.violations || []), newViolation];
-                        updatedStudents[idx] = updated;
+                        if (idx !== -1) {
+                            const updated = { ...students[idx], name: values.name.trim() };
+                            updated.violations = [...(updated.violations || []), ...violationsToAdd];
+                            updatedStudents[idx] = updated;
+                        }
                     } else {
-                        const newStudent = { name: values.name.trim(), violations: [newViolation] };
+                        const newStudent = {
+                            name: values.name.trim(),
+                            violations: violationsToAdd
+                        };
                         updatedStudents.push(newStudent);
                     }
 
                     setStudents(updatedStudents);
                     setIsModalOpen(false);
-                    message.success('Lưu thành công');
+                    message.success(`Đã thêm thành công ${numToAdd} tờ tự kiểm`);
                 }).catch(() => message.error('Vui lòng điền đầy đủ thông tin!'));
             };
 
@@ -479,9 +489,12 @@
                         cancelText="Hủy"
                         width={500}
                     >
-                        <Form form={form} layout="vertical">
+                        <Form form={form} layout="vertical" initialValues={{ count: 1 }}>
                             <Form.Item name="name" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}>
                                 <Input placeholder="Ví dụ: Nguyễn Văn A" size="large" />
+                            </Form.Item>
+                            <Form.Item name="count" label="Số lượng tờ tự kiểm muốn thêm" rules={[{ required: true }]}>
+                                <Input type="number" min={1} size="large" />
                             </Form.Item>
                             <Form.Item name="date" label="Ngày vi phạm" rules={[{ required: true, message: 'Vui lòng chọn ngày!' }]}>
                                 <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} size="large" />
