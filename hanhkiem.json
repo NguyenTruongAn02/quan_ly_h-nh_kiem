@@ -16,6 +16,11 @@
         "date": "2026-01-23",
         "description": "Tàn trữ pháo, đánh bạn học lớp dưới, Không thuộc bài",
         "driveLink": "https://drive.google.com/drive/folders/1xO8lf9gOEcoO2L8izHmFSnYPCrhlmQfc?usp=sharing"
+      },
+      {
+        "date": "2026-01-30",
+        "description": "MTT, KTB, Chọi phấn bạn ",
+        "driveLink": "https://drive.google.com/drive/folders/1xO8lf9gOEcoO2L8izHmFSnYPCrhlmQfc?usp=drive_link"
       }
     ]
   },
@@ -26,6 +31,16 @@
         "date": "2026-01-23",
         "description": "Mua bán tàn trữ pháo",
         "driveLink": "https://drive.google.com/drive/folders/1njIM3X9lokptS962cJ3QmFc41vCZf0uW?usp=sharing"
+      },
+      {
+        "date": "2026-01-30",
+        "description": "Chọi phấn bạn không thuộc bài",
+        "driveLink": "https://drive.google.com/drive/folders/1njIM3X9lokptS962cJ3QmFc41vCZf0uW?usp=drive_link"
+      },
+      {
+        "date": "2026-01-30",
+        "description": "Chọi phấn bạn không thuộc bài",
+        "driveLink": "https://drive.google.com/drive/folders/1njIM3X9lokptS962cJ3QmFc41vCZf0uW?usp=drive_link"
       }
     ]
   },
@@ -51,6 +66,11 @@
         "date": "2026-01-23",
         "description": "Tàn trữ pháo, không thực hiện đúng nề nếp",
         "driveLink": "https://drive.google.com/drive/folders/13BC6il1_6H6Un53oDoOHJygCUoLXZv91?usp=sharing"
+      },
+      {
+        "date": "2026-01-30",
+        "description": "MTT, KTB, không ghi bài",
+        "driveLink": "https://drive.google.com/drive/folders/13BC6il1_6H6Un53oDoOHJygCUoLXZv91?usp=drive_link"
       }
     ]
   },
@@ -96,6 +116,56 @@
         "date": "2026-01-23",
         "description": "Tàn trữ trái phép pháo",
         "driveLink": "https://drive.google.com/drive/folders/1Q0UBYYsKE3rGqy7oADrmz2mBWFijiWF5?usp=sharing"
+      },
+      {
+        "date": "2026-01-30",
+        "description": "KPH, KKQ",
+        "driveLink": "https://drive.google.com/drive/folders/1Q0UBYYsKE3rGqy7oADrmz2mBWFijiWF5?usp=drive_link"
+      },
+      {
+        "date": "2026-01-30",
+        "description": "KPH, KKQ",
+        "driveLink": "https://drive.google.com/drive/folders/1Q0UBYYsKE3rGqy7oADrmz2mBWFijiWF5?usp=drive_link"
+      }
+    ]
+  },
+  {
+    "name": "Tú",
+    "violations": [
+      {
+        "date": "2026-01-30",
+        "description": "KPH, KKQ",
+        "driveLink": "https://drive.google.com/drive/folders/1eyzedz8uf2lfDoVHxhDOA6xN0Emrq2qJ?usp=sharing"
+      }
+    ]
+  },
+  {
+    "name": "Tiên",
+    "violations": [
+      {
+        "date": "2026-01-30",
+        "description": "Không mặc đúng đồng phục",
+        "driveLink": "https://drive.google.com/drive/folders/1jjx4D7LoOxcst4fyL_-3YBAn2aV9cK9_?usp=sharing"
+      }
+    ]
+  },
+  {
+    "name": "Nam",
+    "violations": [
+      {
+        "date": "2026-01-30",
+        "description": "Không thuộc bài, không nghiêm túc trong giờ học",
+        "driveLink": "https://drive.google.com/drive/folders/1DvkssJPrjMdBEz4kBB3cm3apUqNl8BwH?usp=sharing"
+      }
+    ]
+  },
+  {
+    "name": "Nguyện",
+    "violations": [
+      {
+        "date": "2026-01-30",
+        "description": "Không phù hiệu, không ghi bai",
+        "driveLink": "https://drive.google.com/drive/folders/1JpttGAM5kb67qRpu31Yef5n6QFbK5AuI?usp=sharing"
       }
     ]
   }

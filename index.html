@@ -363,13 +363,16 @@
                     ] : null}
                 >
                     <p><strong>Tổng tự kiểm (toàn bộ):</strong> {student.totalViolations}</p>
-                    <p><strong>Tự kiểm tháng này:</strong> {student.thisMonthViolations}</p>                   
+                    <p><strong>Tự kiểm tháng này:</strong> {student.thisMonthViolations}</p>
                     <p>
                         <strong>Tự kiểm gần nhất:</strong><br />
                         {student.lastViolation ? (
                             <>
                                 Ngày: {student.lastViolation.date}<br />
+                                {/*
                                 Mô tả: {student.lastViolation.description}<br />
+                                    
+                                    */}
                                 <span className="link" onClick={() => window.open(student.lastDriveLink.replace('/view', '/preview'), '_blank')}>
                                     Xem ảnh Google Drive →
                                 </span>
